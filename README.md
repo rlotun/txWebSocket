@@ -3,9 +3,12 @@ Twisted WebSocket Server
 
 To run:
 
-    $ sudo python test_server.py
+    $ sudo python simple_server.py
 
 In your browser go to http://localhost:8080.
+
+N.B.: Why sudo? It's because the simple server hosts a flash socket policy file on port
+843. This is optional, of course.
 
 Notes
 =====
