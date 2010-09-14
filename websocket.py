@@ -17,9 +17,11 @@ current version of the specification.
 from hashlib import md5
 import struct
 
+from twisted.internet import interfaces
 from twisted.web.http import datetimeToString
 from twisted.web.http import _IdentityTransferDecoder
 from twisted.web.server import Request, Site, version, unquote
+from zope.interface import implements
 
 
 _ascii_numbers = frozenset(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
@@ -136,7 +138,6 @@ class WebSocketRequest(Request):
 
             originHeader = originHeaders[0]
             hostHeader = hostHeaders[0]
-
             self.startedWriting = True
             handshake = [
                 "HTTP/1.1 101 Web Socket Protocol Handshake",
@@ -296,6 +297,8 @@ class WebSocketTransport(object):
     Transport abstraction over WebSocket, providing classic Twisted methods and
     callbacks.
     """
+    implements(interfaces.ITransport)
+
     _handler = None
 
     def __init__(self, request):
@@ -316,6 +319,17 @@ class WebSocketTransport(object):
         """
         self._handler.connectionLost(reason)
 
+
+    def getPeer(self):
+        """
+        Return a tuple describing the other side of the connection.
+
+        @rtype: C{tuple}
+        """
+        return self._request.transport.getPeer()
+
+    def getHost(self):
+        return self._request.transport.getHost()
 
     def write(self, frame):
         """

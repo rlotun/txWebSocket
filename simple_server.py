@@ -30,11 +30,12 @@ class Testhandler(WebSocketHandler):
         self.transport.write(data)
 
     def frameReceived(self, frame):
+        print 'Peer: ', self.transport.getPeer()
         self.transport.write(frame)
         self.periodic_call.start(0.5)
 
     def connectionLost(self, reason):
-        print 'Lost connection: ', reason
+        print 'Lost connection.'
 
 
 class FlashSocketPolicy(Protocol):
