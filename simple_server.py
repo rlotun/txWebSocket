@@ -24,6 +24,9 @@ class Testhandler(WebSocketHandler):
         WebSocketHandler.__init__(self, transport)
         self.periodic_call = task.LoopingCall(self.send_time)
 
+    def __del__(self):
+        print 'Deleting handler'
+
     def send_time(self):
         # send current time as an ISO8601 string
         data = datetime.utcnow().isoformat().encode('utf8')
@@ -36,9 +39,15 @@ class Testhandler(WebSocketHandler):
 
     def connectionMade(self):
         print 'Connected to client.'
+        # here would be a good place to register this specific handler
+        # in a dictionary mapping some client identifier (like IPs) against
+        # self (this handler object)
 
     def connectionLost(self, reason):
         print 'Lost connection.'
+        self.periodic_call.stop()
+        del self.periodic_call
+        # here is a good place to deregister this handler object
 
 
 class FlashSocketPolicy(Protocol):
@@ -53,6 +62,7 @@ class FlashSocketPolicy(Protocol):
         self.transport.loseConnection()
 
 
+
 if __name__ == "__main__":
     from twisted.internet import reactor
 
@@ -62,11 +72,9 @@ if __name__ == "__main__":
     site = WebSocketSite(root)
     site.addHandler('/test', Testhandler)
     reactor.listenTCP(8080, site)
-
     # run policy file server
     factory = Factory()
     factory.protocol = FlashSocketPolicy
     reactor.listenTCP(843, factory)
-
     reactor.run()
 

@@ -84,9 +84,6 @@ class WebSocketRequest(Request):
         handlerFactory = self.site.handlers.get(self.uri)
         if not handlerFactory:
             return finish()
-        transport = WebSocketTransport(self)
-        handler = handlerFactory(transport)
-        transport._attachHandler(handler)
 
         # key1 and key2 exist and are a string of characters
         # filter both keys to get a string with all numbers in order
@@ -120,6 +117,10 @@ class WebSocketRequest(Request):
         # get two resulting numbers, as specified in hixie-76
         num1 = num1 / numSpaces1
         num2 = num2 / numSpaces2
+
+        transport = WebSocketTransport(self)
+        handler = handlerFactory(transport)
+        transport._attachHandler(handler)
 
         self.channel.setRawMode()
 
@@ -161,7 +162,7 @@ class WebSocketRequest(Request):
             self.write("\r\n")
 
             # concatenate num1 (32 bit in), num2 (32 bit int), nonce, and take md5 of result
-            res = struct.pack('>ii8s', num1, num2, nonce)
+            res = struct.pack('>II8s', num1, num2, nonce)
             server_response = md5(res).digest()
             self.write(server_response)
 
@@ -279,7 +280,6 @@ class WebSocketSite(Site):
         self.handlers = {}
         self.supportedProtocols = supportedProtocols or []
 
-
     def addHandler(self, name, handlerFactory):
         """
         Add or override a handler for the given C{name}.
@@ -308,13 +308,11 @@ class WebSocketTransport(object):
         self._request = request
         self._request.notifyFinish().addErrback(self._connectionLost)
 
-
     def _attachHandler(self, handler):
         """
         Attach the given L{WebSocketHandler} to this transport.
         """
         self._handler = handler
-
 
     def _connectionMade(self):
         """
@@ -327,7 +325,9 @@ class WebSocketTransport(object):
         Forward connection lost event to the L{WebSocketHandler}.
         """
         self._handler.connectionLost(reason)
-
+        del self._request.transport
+        del self._request
+        del self._handler
 
     def getPeer(self):
         """
@@ -367,8 +367,9 @@ class WebSocketTransport(object):
         Close the connection.
         """
         self._request.transport.loseConnection()
-
-
+        del self._request.transport
+        del self._request
+        del self._handler
 
 class WebSocketHandler(object):
     """
@@ -445,7 +446,6 @@ class WebSocketFrameDecoder(object):
         self._data = []
         self._currentFrameLength = 0
 
-
     def dataReceived(self, data):
         """
         Parse data to read WebSocket frames.
@@ -485,5 +485,5 @@ class WebSocketFrameDecoder(object):
 
 
 
-___all__ = ["WebSocketHandler", "WebSocketSite"]
+__all__ = ["WebSocketHandler", "WebSocketSite"]
 
