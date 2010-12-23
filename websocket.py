@@ -169,6 +169,8 @@ class WebSocketRequest(Request):
             self.channel._transferDecoder = WebSocketFrameDecoder(
                 self, handler)
 
+            transport._connectionMade()
+
         # we need the nonce from the request body
         self.channel._transferDecoder = _IdentityTransferDecoder(0, lambda _ : None, finishHandshake)
 
@@ -255,6 +257,7 @@ class WebSocketRequest(Request):
             # XXX we probably don't want to set _transferDecoder
             self.channel._transferDecoder = WebSocketFrameDecoder(
                 self, handler)
+            transport._connectionMade()
             return
 
 
@@ -313,6 +316,12 @@ class WebSocketTransport(object):
         self._handler = handler
 
 
+    def _connectionMade(self):
+        """
+        Called when a connection is made.
+        """
+        self._handler.connectionMade()
+
     def _connectionLost(self, reason):
         """
         Forward connection lost event to the L{WebSocketHandler}.
@@ -329,6 +338,13 @@ class WebSocketTransport(object):
         return self._request.transport.getPeer()
 
     def getHost(self):
+        """
+        Similar to getPeer, but returns an address describing this side of the
+        connection.
+
+        @return: An L{IAddress} provider.
+        """
+
         return self._request.transport.getHost()
 
     def write(self, frame):
@@ -340,6 +356,11 @@ class WebSocketTransport(object):
         """
         self._request.write("\x00%s\xff" % frame)
 
+    def writeSequence(self, frames):
+        """
+        Send a sequence of frames to the connected client.
+        """
+        self._request.write("".join(["\x00%s\xff" % f for f in frame]))
 
     def loseConnection(self):
         """
@@ -382,6 +403,11 @@ class WebSocketHandler(object):
         """
         self.transport.loseConnection()
 
+
+    def connectionMade(self):
+        """
+        Called when a connection is made.
+        """
 
     def connectionLost(self, reason):
         """

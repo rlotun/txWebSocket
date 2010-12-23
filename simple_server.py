@@ -34,6 +34,9 @@ class Testhandler(WebSocketHandler):
         self.transport.write(frame)
         self.periodic_call.start(0.5)
 
+    def connectionMade(self):
+        print 'Connected to client.'
+
     def connectionLost(self, reason):
         print 'Lost connection.'
 
