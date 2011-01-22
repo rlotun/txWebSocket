@@ -258,7 +258,7 @@ class WebSocketRequest(Request):
             # XXX we probably don't want to set _transferDecoder
             self.channel._transferDecoder = WebSocketFrameDecoder(
                 self, handler)
-            transport._connectionMade()
+            handler.transport._connectionMade()
             return
 
 
