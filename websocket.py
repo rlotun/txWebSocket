@@ -360,7 +360,7 @@ class WebSocketTransport(object):
         """
         Send a sequence of frames to the connected client.
         """
-        self._request.write("".join(["\x00%s\xff" % f for f in frame]))
+        self._request.write("".join(["\x00%s\xff" % f for f in frames]))
 
     def loseConnection(self):
         """
